@@ -2,7 +2,7 @@ package common
 
 import "strings"
 
-func capitalizeFirst(s string) string {
+func CapitalizeFirst(s string) string {
 	if len(s) == 0 {
 		return s
 	}
