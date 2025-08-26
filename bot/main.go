@@ -103,6 +103,17 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		user := i.ApplicationCommandData().Options[0].UserValue(s)
 		amount := i.ApplicationCommandData().Options[1].IntValue()
 
+		if i.Member.User.ID == user.ID {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⚠️ You can't give points to yourself!",
+					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
+				},
+			})
+			return
+		}
+
 		err := commands.AddPoints(user.ID, user.Username, int(amount), database.DB)
 		if err != nil {
 			// Send ephemeral error response
