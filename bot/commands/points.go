@@ -3,18 +3,23 @@ package commands
 import (
 	"database/sql"
 	"fmt"
+	"github.com/KieranJamess/homiepoints/bot/database"
 )
 
-func AddPoints(userID, username string, amount int, db *sql.DB) error {
+func AddPoints(givingUserID, givingUsername, receivingUserID, receivingUsername, guildID string, amount int, reason *string, db *sql.DB) error {
 	_, err := db.Exec(`
         INSERT INTO points (user_id, username, points)
         VALUES (?, ?, ?)
         ON CONFLICT(user_id) DO UPDATE SET
             points = points + excluded.points,
             username = excluded.username
-    `, userID, username, amount)
+    `, receivingUserID, receivingUsername, amount)
 	if err != nil {
-		return fmt.Errorf("DB Error: %v", err)
+		return fmt.Errorf("DB Error on adding points: %v", err)
+	}
+	err = database.AddPointActivity(givingUserID, givingUsername, receivingUserID, receivingUsername, reason, amount, guildID, database.DB)
+	if err != nil {
+		return fmt.Errorf("DB Error on adding to Activity log: %v", err)
 	}
 	return nil
 }

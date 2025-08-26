@@ -107,16 +107,18 @@ func main() {
 func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.ApplicationCommandData().Name == "give" {
 
-		var reason string
+		var reason *string
 		for _, opt := range i.ApplicationCommandData().Options {
 			if opt.Name == "reason" {
-				reason = opt.StringValue()
+				val := opt.StringValue()
+				reason = &val
 				break
 			}
 		}
 
 		user := i.ApplicationCommandData().Options[0].UserValue(s)
 		amount := i.ApplicationCommandData().Options[1].IntValue()
+		guildId := i.GuildID
 
 		if i.Member.User.ID == user.ID {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -129,7 +131,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		if reason == "" && amount > 1 {
+		if (reason == nil || *reason == "") && amount > 1 {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -140,7 +142,16 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		err := commands.AddPoints(user.ID, user.Username, int(amount), database.DB)
+		err := commands.AddPoints(
+			i.Member.User.ID,       // Giving User
+			i.Member.User.Username, // Giving User
+			user.ID,                // Receiving User
+			user.Username,          // Receiving User
+			guildId,
+			int(amount),
+			reason,
+			database.DB,
+		)
 		if err != nil {
 			// Send ephemeral error response
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -160,8 +171,8 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			common.CapitalizeFirst(user.DisplayName()),
 		)
 
-		if reason != "" {
-			msg = fmt.Sprintf("%s Reason: %s", msg, common.CapitalizeFirst(reason))
+		if (reason == nil || *reason == "") && amount > 1 {
+			msg = fmt.Sprintf("%s Reason: %s", msg, common.CapitalizeFirst(*reason))
 		}
 
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
