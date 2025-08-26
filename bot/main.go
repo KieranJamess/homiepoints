@@ -68,6 +68,12 @@ func main() {
 				Description: "Number of points to give",
 				Required:    true,
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "reason",
+				Description: "Reason for the points but not required if giving 1 point",
+				Required:    false,
+			},
 		},
 	})
 	if err != nil {
@@ -100,6 +106,15 @@ func main() {
 
 func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.ApplicationCommandData().Name == "give" {
+
+		var reason string
+		for _, opt := range i.ApplicationCommandData().Options {
+			if opt.Name == "reason" {
+				reason = opt.StringValue()
+				break
+			}
+		}
+
 		user := i.ApplicationCommandData().Options[0].UserValue(s)
 		amount := i.ApplicationCommandData().Options[1].IntValue()
 
@@ -108,6 +123,17 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "⚠️ You can't give points to yourself!",
+					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
+				},
+			})
+			return
+		}
+
+		if reason == "" && amount > 1 {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⚠️ Adding more than 1 point requires a reason",
 					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
 				},
 			})
@@ -127,19 +153,21 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
+		msg := fmt.Sprintf("%s gave %d homie %s to %s!",
+			common.CapitalizeFirst(i.Member.User.DisplayName()),
+			amount,
+			map[bool]string{true: "point", false: "points"}[amount == 1],
+			common.CapitalizeFirst(user.DisplayName()),
+		)
+
+		if reason != "" {
+			msg = fmt.Sprintf("%s Reason: %s", msg, common.CapitalizeFirst(reason))
+		}
+
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: fmt.Sprintf("%s gave %d homie %s to %s!",
-					common.CapitalizeFirst(i.Member.User.DisplayName()),
-					amount,
-					func() string {
-						if amount == 1 {
-							return "point"
-						}
-						return "points"
-					}(),
-					common.CapitalizeFirst(user.DisplayName())),
+				Content: msg,
 			},
 		})
 	}
@@ -154,7 +182,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: fmt.Sprintf("⚠️ Can't get points for %s!", common.CapitalizeFirst(user.DisplayName())),
-					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
+					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			})
 		} else {
@@ -162,7 +190,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: fmt.Sprintf("Points for %s is %v!", common.CapitalizeFirst(user.DisplayName()), points),
-					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
+					Flags:   discordgo.MessageFlagsEphemeral,
 				},
 			})
 		}
