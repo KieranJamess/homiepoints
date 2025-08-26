@@ -131,7 +131,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: fmt.Sprintf("%s gave %d homie %s to %s!",
-					common.CapitalizeFirst(i.Member.User.Username),
+					common.CapitalizeFirst(i.Member.User.DisplayName()),
 					amount,
 					func() string {
 						if amount == 1 {
@@ -139,7 +139,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 						}
 						return "points"
 					}(),
-					user.Username),
+					common.CapitalizeFirst(user.DisplayName())),
 			},
 		})
 	}
@@ -153,7 +153,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: fmt.Sprintf("⚠️ Can't get points for %s!", user.Username),
+					Content: fmt.Sprintf("⚠️ Can't get points for %s!", common.CapitalizeFirst(user.DisplayName())),
 					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
 				},
 			})
@@ -161,7 +161,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: fmt.Sprintf("Points for %s is %v!", user.Username, points),
+					Content: fmt.Sprintf("Points for %s is %v!", common.CapitalizeFirst(user.DisplayName()), points),
 					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
 				},
 			})
