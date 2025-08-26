@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/KieranJamess/homiepoints/bot/commands"
 	"github.com/KieranJamess/homiepoints/bot/database"
 	"github.com/KieranJamess/homiepoints/common"
 	"github.com/bwmarrin/discordgo"
@@ -73,6 +74,22 @@ func main() {
 		common.Log.Errorf("Failed to register /give command: %v", err)
 	}
 
+	_, err = dg.ApplicationCommandCreate(dg.State.User.ID, "", &discordgo.ApplicationCommand{
+		Name:        "get",
+		Description: "Get points for a user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "The user to give points to",
+				Required:    true,
+			},
+		},
+	})
+	if err != nil {
+		common.Log.Errorf("Failed to register /get command: %v", err)
+	}
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
@@ -86,7 +103,18 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		user := i.ApplicationCommandData().Options[0].UserValue(s)
 		amount := i.ApplicationCommandData().Options[1].IntValue()
 
-		addPoints(user.ID, user.Username, int(amount))
+		err := commands.AddPoints(user.ID, user.Username, int(amount), database.DB)
+		if err != nil {
+			// Send ephemeral error response
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⚠️ Something went wrong while giving points. Please try again.",
+					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
+				},
+			})
+			return
+		}
 
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -104,17 +132,28 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 	}
-}
 
-func addPoints(userID, username string, amount int) {
-	_, err := db.Exec(`
-        INSERT INTO points (user_id, username, points)
-        VALUES (?, ?, ?)
-        ON CONFLICT(user_id) DO UPDATE SET
-            points = points + excluded.points,
-            username = excluded.username
-    `, userID, username, amount)
-	if err != nil {
-		common.Log.Errorf("DB Error: %v", err)
+	if i.ApplicationCommandData().Name == "get" {
+		user := i.ApplicationCommandData().Options[0].UserValue(s)
+
+		points, err := commands.GetPoints(user.ID, database.DB)
+
+		if err != nil {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: fmt.Sprintf("⚠️ Can't get points for %s!", user.Username),
+					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
+				},
+			})
+		} else {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: fmt.Sprintf("Points for %s is %v!", user.Username, points),
+					Flags:   discordgo.MessageFlagsEphemeral, // only visible to the user
+				},
+			})
+		}
 	}
 }
