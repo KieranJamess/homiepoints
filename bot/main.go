@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/KieranJamess/homiepoints/bot/commands"
 	"github.com/KieranJamess/homiepoints/bot/database"
 	"github.com/KieranJamess/homiepoints/common"
 	"github.com/bwmarrin/discordgo"
@@ -142,7 +141,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			return
 		}
 
-		err := commands.AddPoints(
+		err := database.AddPoints(
 			i.Member.User.ID,       // Giving User
 			i.Member.User.Username, // Giving User
 			user.ID,                // Receiving User
@@ -171,7 +170,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			common.CapitalizeFirst(user.DisplayName()),
 		)
 
-		if (reason == nil || *reason == "") && amount > 1 {
+		if reason != nil && *reason != "" {
 			msg = fmt.Sprintf("%s Reason: %s", msg, common.CapitalizeFirst(*reason))
 		}
 
@@ -186,7 +185,7 @@ func interactionHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.ApplicationCommandData().Name == "get" {
 		user := i.ApplicationCommandData().Options[0].UserValue(s)
 
-		points, err := commands.GetPoints(user.ID, database.DB)
+		points, err := database.GetPoints(user.ID, database.DB)
 
 		if err != nil {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
