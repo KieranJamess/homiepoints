@@ -25,7 +25,7 @@ func handleLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "⚠️ No leaderboard data found for this server!",
+				Content: "⚠️ No leaderboard data found for this server! Give some points...",
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
