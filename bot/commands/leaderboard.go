@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/KieranJamess/homiepoints/bot/database"
+	"github.com/KieranJamess/homiepoints/common"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -46,7 +47,7 @@ func handleLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			rankEmoji = ":bust_in_silhouette:"
 		}
 
-		msg += fmt.Sprintf("%s **%s** — %d points\n", rankEmoji, entry.Username, entry.Points)
+		msg += fmt.Sprintf("%s **%s** — %d points\n", rankEmoji, common.CapitalizeFirst(entry.Username), entry.Points)
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

@@ -11,8 +11,6 @@ type LeaderboardEntry struct {
 }
 
 func Leaderboard(guildID string, db *sql.DB) ([]LeaderboardEntry, error) {
-	fmt.Println("Querying leaderboard")
-	fmt.Sprintf("guild_id: %s", guildID)
 	rows, err := db.Query(`
 		SELECT username, points
 		FROM points
