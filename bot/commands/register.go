@@ -7,14 +7,26 @@ import (
 const DEV_GUILD_ID = "1015678358190817442"
 
 var commandHandlers = map[string]func(*discordgo.Session, *discordgo.InteractionCreate){
-	"give": handleGive,
-	"get":  handleGet,
+	"help":        handleHelp,
+	"give":        handleGive,
+	"get":         handleGet,
+	"leaderboard": handleLeaderboard,
 }
 
 // Register registers all application commands
 func Register(s *discordgo.Session) error {
+	var err error
+	// /help command
+	_, err = s.ApplicationCommandCreate(s.State.User.ID, DEV_GUILD_ID, &discordgo.ApplicationCommand{
+		Name:        "help",
+		Description: "Shows the help message",
+	})
+	if err != nil {
+		return err
+	}
+
 	// /give command
-	_, err := s.ApplicationCommandCreate(s.State.User.ID, DEV_GUILD_ID, &discordgo.ApplicationCommand{
+	_, err = s.ApplicationCommandCreate(s.State.User.ID, DEV_GUILD_ID, &discordgo.ApplicationCommand{
 		Name:        "give",
 		Description: "Give homie points to another user",
 		Options: []*discordgo.ApplicationCommandOption{
@@ -54,6 +66,15 @@ func Register(s *discordgo.Session) error {
 				Required:    true,
 			},
 		},
+	})
+	if err != nil {
+		return err
+	}
+
+	// /leaderboard command
+	_, err = s.ApplicationCommandCreate(s.State.User.ID, DEV_GUILD_ID, &discordgo.ApplicationCommand{
+		Name:        "leaderboard",
+		Description: "Shows a leaderboard",
 	})
 	if err != nil {
 		return err
