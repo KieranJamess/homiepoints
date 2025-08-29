@@ -14,6 +14,7 @@ func handleHelp(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		{"/give [user] [amount] [reason]", "Give homie points to another user. Reason is only required if giving more than 1 point"},
 		{"/get [user]", "Get points for a specific user"},
 		{"/leaderboard", "Show the server's current homie points leaderboard"},
+		{"/activity [user]", "Gets recent activity for the server, or for a specific user"},
 	}
 
 	msg := "**📖 Available Commands:**\n\n"

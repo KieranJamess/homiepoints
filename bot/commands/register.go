@@ -11,6 +11,7 @@ var commandHandlers = map[string]func(*discordgo.Session, *discordgo.Interaction
 	"give":        handleGive,
 	"get":         handleGet,
 	"leaderboard": handleLeaderboard,
+	"activity":    handleActivity,
 }
 
 // Register registers all application commands
@@ -75,6 +76,23 @@ func Register(s *discordgo.Session) error {
 	_, err = s.ApplicationCommandCreate(s.State.User.ID, DEV_GUILD_ID, &discordgo.ApplicationCommand{
 		Name:        "leaderboard",
 		Description: "Shows a leaderboard",
+	})
+	if err != nil {
+		return err
+	}
+
+	// /activity command
+	_, err = s.ApplicationCommandCreate(s.State.User.ID, DEV_GUILD_ID, &discordgo.ApplicationCommand{
+		Name:        "activity",
+		Description: "Show recent activity or a user's activity",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "User to get activity for (optional)",
+				Required:    false,
+			},
+		},
 	})
 	if err != nil {
 		return err

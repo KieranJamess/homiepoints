@@ -8,7 +8,6 @@ import (
 )
 
 func handleLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
 	leaderboardData, err := database.Leaderboard(i.GuildID, database.DB)
 	if err != nil {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
