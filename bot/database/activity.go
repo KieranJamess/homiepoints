@@ -7,7 +7,9 @@ import (
 
 type Activity struct {
 	GivingUsername    string
+	GivingUserID      string
 	ReceivingUsername string
+	ReceivingUserID   string
 	Reason            sql.NullString
 	Points            int
 	OccurredAt        string
@@ -30,7 +32,7 @@ func GetRecentActivities(db *sql.DB, guildID string, userID *string) ([]Activity
 
 	if userID != nil {
 		rows, err = db.Query(`
-            SELECT giving_username, receiving_username, reason, points
+            SELECT giving_username, giving_user_id, receiving_username, receiving_user_id, reason, points
             FROM activity_points
             WHERE guild_id = ?
               AND (giving_user_id = ?)
@@ -39,7 +41,7 @@ func GetRecentActivities(db *sql.DB, guildID string, userID *string) ([]Activity
         `, guildID, *userID, *userID)
 	} else {
 		rows, err = db.Query(`
-            SELECT giving_username, receiving_username, reason, points
+            SELECT giving_username, giving_user_id, receiving_username, receiving_user_id, reason, points
             FROM activity_points
             WHERE guild_id = ?
             ORDER BY id DESC
@@ -55,7 +57,7 @@ func GetRecentActivities(db *sql.DB, guildID string, userID *string) ([]Activity
 	activities := make([]Activity, 0)
 	for rows.Next() {
 		var a Activity
-		if err := rows.Scan(&a.GivingUsername, &a.ReceivingUsername, &a.Reason, &a.Points); err != nil {
+		if err := rows.Scan(&a.GivingUsername, &a.GivingUserID, &a.ReceivingUsername, &a.ReceivingUserID, &a.Reason, &a.Points); err != nil {
 			return nil, err
 		}
 		activities = append(activities, a)

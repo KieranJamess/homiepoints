@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/KieranJamess/homiepoints/bot/database"
+	"github.com/KieranJamess/homiepoints/bot/internal"
 	"github.com/KieranJamess/homiepoints/common"
 	"github.com/bwmarrin/discordgo"
 )
@@ -65,10 +66,10 @@ func handleGive(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	msg := fmt.Sprintf("%s gave %d homie %s to %s!",
-		common.CapitalizeFirst(i.Member.User.DisplayName()),
+		common.CapitalizeFirst(i.Member.Nick),
 		amount,
 		map[bool]string{true: "point", false: "points"}[amount == 1],
-		common.CapitalizeFirst(user.DisplayName()),
+		common.CapitalizeFirst(internal.GetDisplayName(s, guildId, user)),
 	)
 
 	if reason != nil && *reason != "" {
@@ -91,7 +92,7 @@ func handleGet(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: fmt.Sprintf("⚠️ Can't get points for %s!", common.CapitalizeFirst(user.DisplayName())),
+				Content: fmt.Sprintf("⚠️ Can't get points for %s!", common.CapitalizeFirst(internal.GetDisplayName(s, i.GuildID, user))),
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
@@ -101,7 +102,7 @@ func handleGet(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("Points for %s is %v!", common.CapitalizeFirst(user.DisplayName()), points),
+			Content: fmt.Sprintf("Points for %s is %v!", common.CapitalizeFirst(internal.GetDisplayName(s, i.GuildID, user)), points),
 			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})

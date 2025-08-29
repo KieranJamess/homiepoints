@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"github.com/KieranJamess/homiepoints/bot/database"
+	"github.com/KieranJamess/homiepoints/bot/internal"
 	"github.com/KieranJamess/homiepoints/common"
 	"github.com/bwmarrin/discordgo"
 )
@@ -33,9 +34,9 @@ func handleLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	msg := "**🏆 Leaderboard 🏆**\n\n"
 
-	for i, entry := range leaderboardData {
+	for idx, entry := range leaderboardData {
 		var rankEmoji string
-		switch i {
+		switch idx {
 		case 0:
 			rankEmoji = ":first_place:"
 		case 1:
@@ -46,7 +47,12 @@ func handleLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			rankEmoji = ":bust_in_silhouette:"
 		}
 
-		msg += fmt.Sprintf("%s **%s** — %d points\n", rankEmoji, common.CapitalizeFirst(entry.Username), entry.Points)
+		user, err := internal.GetUserContext(s, entry.UserID)
+		if err != nil {
+			common.Log.Errorf("Error getting user from context: %v", err)
+		}
+
+		msg += fmt.Sprintf("%s **%s** — %d points\n", rankEmoji, common.CapitalizeFirst(internal.GetDisplayName(s, i.GuildID, user)), entry.Points)
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
